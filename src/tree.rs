@@ -325,11 +325,11 @@ impl<T: Value> Tree<T> {
                         let max_left_length = Length(1 << new_full_depth);
                         let orig_left_length = std::cmp::min(orig_length, max_left_length);
                         let orig_right_length =
-                            Length(orig_length.as_usize() - orig_left_length.as_usize());
+                            Length(orig_length.as_u64() - orig_left_length.as_u64());
 
                         let base_left_length = std::cmp::min(base_length, max_left_length);
                         let base_right_length =
-                            Length(base_length.as_usize() - base_left_length.as_usize());
+                            Length(base_length.as_u64() - base_left_length.as_u64());
                         (
                             (orig_left_length, base_left_length),
                             (orig_right_length, base_right_length),

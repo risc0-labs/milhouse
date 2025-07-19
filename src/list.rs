@@ -96,7 +96,7 @@ impl<T: Value, N: Unsigned, U: UpdateMap<T>> List<T, N, U> {
 
         // Check the length to cover the case where the capacity implied by packing_depth is
         // greater than N. E.g. the builder might pack up to 32 u8s, even if N is < 32.
-        if length.as_usize() > N::to_usize() {
+        if length.as_u64() > N::to_u64() {
             return Err(Error::BuilderFull);
         }
 
@@ -191,9 +191,9 @@ impl<T: Value, N: Unsigned, U: UpdateMap<T>> List<T, N, U> {
 
     pub(crate) fn depth() -> usize {
         if let Some(packing_bits) = opt_packing_depth::<T>() {
-            int_log(N::to_usize()).saturating_sub(packing_bits)
+            int_log(N::to_u64()).saturating_sub(packing_bits)
         } else {
-            int_log(N::to_usize())
+            int_log(N::to_u64())
         }
     }
 
@@ -248,7 +248,7 @@ impl<T: Value, N: Unsigned, U: UpdateMap<T>> List<T, N, U> {
 
 impl<T: Value, N: Unsigned> ImmList<T> for ListInner<T, N> {
     fn get(&self, index: usize) -> Option<&T> {
-        if index < self.len().as_usize() {
+        if (index as u64) < self.len().as_u64() {
             self.tree
                 .get_recursive(index, self.depth, self.packing_depth)
         } else {
@@ -283,15 +283,15 @@ where
     }
 
     fn replace(&mut self, index: usize, value: T) -> Result<(), Error> {
-        if index > self.len().as_usize() {
+        if (index as u64) > self.len().as_u64() {
             return Err(Error::OutOfBoundsUpdate {
                 index,
-                len: self.len().as_usize(),
+                len: self.len().as_u64(),
             });
         }
 
         self.tree = self.tree.with_updated_leaf(index, value, self.depth)?;
-        if index == self.length.as_usize() {
+        if (index as u64) == self.length.as_u64() {
             *self.length.as_mut() += 1;
         }
         Ok(())
@@ -492,7 +492,7 @@ where
     }
 
     fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, ssz::DecodeError> {
-        let max_len = N::to_usize();
+        let max_len = N::to_u64();
 
         if bytes.is_empty() {
             Ok(List::empty())
@@ -502,7 +502,7 @@ where
                 .checked_div(<T as Decode>::ssz_fixed_len())
                 .ok_or(ssz::DecodeError::ZeroLengthItem)?;
 
-            if num_items > max_len {
+            if num_items as u64 > max_len {
                 return Err(ssz::DecodeError::BytesInvalid(format!(
                     "List of {num_items} items exceeds maximum of {max_len}"
                 )));
@@ -519,7 +519,7 @@ where
                 },
             )?
         } else {
-            ssz::decode_list_of_variable_length_items(bytes, Some(max_len))
+            ssz::decode_list_of_variable_length_items(bytes, Some(max_len as usize))
         }
     }
 }

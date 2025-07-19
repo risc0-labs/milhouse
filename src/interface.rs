@@ -16,7 +16,7 @@ pub trait ImmList<T: Value> {
     fn len(&self) -> Length;
 
     fn is_empty(&self) -> bool {
-        self.len().as_usize() == 0
+        self.len().as_u64() == 0
     }
 
     fn iter_from(&self, index: usize) -> Iter<'_, T>;
@@ -127,7 +127,7 @@ where
     }
 
     pub fn len(&self) -> usize {
-        updated_length(self.backing.len(), &self.updates).as_usize()
+        updated_length(self.backing.len(), &self.updates).as_u64() as usize
     }
 
     pub fn is_empty(&self) -> bool {

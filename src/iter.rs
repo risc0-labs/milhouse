@@ -41,7 +41,7 @@ impl<'a, T: Value> Iterator for Iter<'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.length.as_usize() {
+        if (self.index as u64) >= self.length.as_u64() {
             return None;
         }
 
@@ -99,8 +99,8 @@ impl<'a, T: Value> Iterator for Iter<'a, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let remaining = self.length.as_usize().saturating_sub(self.index);
-        (remaining, Some(remaining))
+        let remaining = self.length.as_u64().saturating_sub(self.index as u64);
+        (remaining as usize, Some(remaining as usize))
     }
 }
 

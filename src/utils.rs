@@ -22,16 +22,16 @@ impl<T> MaybeArced<T> {
 /// Length type, to avoid confusion with depth and other `usize` parameters.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
 #[cfg_attr(feature = "arbitrary", derive(Arbitrary))]
-pub struct Length(pub usize);
+pub struct Length(pub u64);
 
 impl Length {
     #[allow(clippy::should_implement_trait)]
-    pub fn as_mut(&mut self) -> &mut usize {
+    pub fn as_mut(&mut self) -> &mut u64 {
         &mut self.0
     }
 
     #[inline(always)]
-    pub fn as_usize(&self) -> usize {
+    pub fn as_u64(&self) -> u64 {
         self.0
     }
 }
@@ -39,7 +39,7 @@ impl Length {
 /// Compute ceil(log(n))
 ///
 /// Smallest number of bits d so that n <= 2^d
-pub fn int_log(n: usize) -> usize {
+pub fn int_log(n: u64) -> usize {
     match n.checked_next_power_of_two() {
         Some(x) => x.trailing_zeros() as usize,
         None => 8 * std::mem::size_of::<usize>(),
@@ -74,7 +74,7 @@ pub fn opt_packing_factor<T: TreeHash>() -> Option<usize> {
 /// Compute the depth in a tree at which to start packing values into a `PackedLeaf`.
 pub fn opt_packing_depth<T: TreeHash>() -> Option<usize> {
     let packing_factor = opt_packing_factor::<T>()?;
-    Some(int_log(packing_factor))
+    Some(int_log(packing_factor as u64))
 }
 
 /// Compute the maximum index of a BTreeMap.
@@ -85,7 +85,7 @@ pub fn max_btree_index<T>(map: &BTreeMap<usize, T>) -> Option<usize> {
 /// Compute the length a data structure will have after applying `updates`.
 pub fn updated_length<U: UpdateMap<T>, T>(prev_len: Length, updates: &U) -> Length {
     updates.max_index().map_or(prev_len, |max_idx| {
-        Length(std::cmp::max(max_idx + 1, prev_len.as_usize()))
+        Length(std::cmp::max(max_idx as u64 + 1, prev_len.as_u64()))
     })
 }
 

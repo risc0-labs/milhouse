@@ -14,7 +14,7 @@ pub struct Builder<T: Value> {
     /// Cached value of `opt_packing_depth`.
     packing_depth: usize,
     /// Cached value of capacity: 2^(depth + packing_depth).
-    capacity: usize,
+    capacity: u64,
 }
 
 impl<T: Value> Builder<T> {
@@ -37,15 +37,15 @@ impl<T: Value> Builder<T> {
     }
 
     pub fn push(&mut self, value: T) -> Result<(), Error> {
-        if self.length.as_usize() == self.capacity {
+        if self.length.as_u64() == self.capacity {
             return Err(Error::BuilderFull);
         }
-        let index = self.length.as_usize();
+        let index = self.length.as_u64();
         let next_index = index + 1;
 
         // Fold the nodes on the left of this node into it, and then push that node to the stack.
         let mut new_stack_top = if let Some(packing_factor) = self.packing_factor {
-            if index.is_multiple_of(packing_factor) {
+            if index.is_multiple_of(packing_factor as u64) {
                 MaybeArced::Unarced(Tree::PackedLeaf(PackedLeaf::single(value)))
             } else if let Some(MaybeArced::Unarced(Tree::PackedLeaf(mut leaf))) = self.stack.pop() {
                 leaf.push(value)?;
@@ -74,11 +74,11 @@ impl<T: Value> Builder<T> {
     }
 
     pub fn push_node(&mut self, node: Arc<Tree<T>>, len: usize) -> Result<(), Error> {
-        if self.length.as_usize() == self.capacity {
+        if self.length.as_u64() == self.capacity {
             return Err(Error::BuilderFull);
         }
 
-        let index_on_level = self.length.as_usize() >> self.level;
+        let index_on_level = self.length.as_u64() >> self.level;
         let next_index_on_level = index_on_level + 1;
 
         let mut new_stack_top = MaybeArced::Arced(node);
@@ -102,7 +102,7 @@ impl<T: Value> Builder<T> {
         }
 
         self.stack.push(new_stack_top);
-        *self.length.as_mut() += len;
+        *self.length.as_mut() += len as u64;
 
         Ok(())
     }
@@ -112,14 +112,14 @@ impl<T: Value> Builder<T> {
             return Ok((Tree::zero(self.depth), self.depth, Length(0)));
         }
 
-        let length = self.length.as_usize();
+        let length = self.length.as_u64();
         let level_capacity = 1 << self.level;
         let mut next_index_on_level = length.div_ceil(level_capacity);
 
         // Finish any partially-filled packed leaf.
         if let Some(packing_factor) = self.packing_factor {
             let skip_indices = packing_factor
-                .saturating_sub(self.length.as_usize() % packing_factor)
+                .saturating_sub((self.length.as_u64() % packing_factor as u64) as usize)
                 % packing_factor;
 
             if skip_indices > 0 && self.level == 0 {
@@ -137,7 +137,7 @@ impl<T: Value> Builder<T> {
                         break;
                     }
                 }
-                next_index_on_level += skip_indices;
+                next_index_on_level += skip_indices as u64;
             }
         }
 
@@ -170,7 +170,7 @@ impl<T: Value> Builder<T> {
                 }
             }
 
-            next_index_on_level += 2usize.pow((depth + self.packing_depth - self.level) as u32);
+            next_index_on_level += 2u64.pow((depth + self.packing_depth - self.level) as u32);
         }
 
         let tree = self

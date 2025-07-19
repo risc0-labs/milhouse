@@ -196,7 +196,7 @@ impl<T: Value, N: Unsigned, U: UpdateMap<T>> From<Vector<T, N, U>> for List<T, N
         let mut list = List::from_parts(
             vector.interface.backing.tree,
             vector.interface.backing.depth,
-            Length(N::to_usize()),
+            Length(N::to_u64()),
         );
         list.interface.updates = vector.interface.updates;
         list
@@ -205,7 +205,7 @@ impl<T: Value, N: Unsigned, U: UpdateMap<T>> From<Vector<T, N, U>> for List<T, N
 
 impl<T: Value, N: Unsigned> ImmList<T> for VectorInner<T, N> {
     fn get(&self, index: usize) -> Option<&T> {
-        if index < self.len().as_usize() {
+        if (index as u64) < self.len().as_u64() {
             self.tree
                 .get_recursive(index, self.depth, self.packing_depth)
         } else {
@@ -214,15 +214,15 @@ impl<T: Value, N: Unsigned> ImmList<T> for VectorInner<T, N> {
     }
 
     fn len(&self) -> Length {
-        Length(N::to_usize())
+        Length(N::to_u64())
     }
 
     fn iter_from(&self, index: usize) -> Iter<'_, T> {
-        Iter::from_index(index, &self.tree, self.depth, Length(N::to_usize()))
+        Iter::from_index(index, &self.tree, self.depth, Length(N::to_u64()))
     }
 
     fn level_iter_from(&self, index: usize) -> LevelIter<'_, T> {
-        LevelIter::from_index(index, &self.tree, self.depth, Length(N::to_usize()))
+        LevelIter::from_index(index, &self.tree, self.depth, Length(N::to_u64()))
     }
 }
 
@@ -236,10 +236,10 @@ where
     }
 
     fn replace(&mut self, index: usize, value: T) -> Result<(), Error> {
-        if index >= self.len().as_usize() {
+        if (index as u64) >= self.len().as_u64() {
             return Err(Error::OutOfBoundsUpdate {
                 index,
-                len: self.len().as_usize(),
+                len: self.len().as_u64(),
             });
         }
         self.tree = self.tree.with_updated_leaf(index, value, self.depth)?;
@@ -252,7 +252,7 @@ where
         hash_updates: Option<BTreeMap<(usize, usize), Hash256>>,
     ) -> Result<(), Error> {
         if let Some(max_index) = updates.max_index() {
-            if max_index >= self.len().as_usize() {
+            if (max_index as u64) >= self.len().as_u64() {
                 return Err(Error::InvalidVectorUpdate);
             }
         } else {

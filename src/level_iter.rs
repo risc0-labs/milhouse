@@ -63,7 +63,7 @@ impl<'a, T: Value> Iterator for LevelIter<'a, T> {
     type Item = LevelNode<'a, T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.index >= self.length.as_usize() {
+        if (self.index as u64) >= self.length.as_u64() {
             return None;
         }
 
