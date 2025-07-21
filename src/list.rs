@@ -519,7 +519,9 @@ where
                 },
             )?
         } else {
-            ssz::decode_list_of_variable_length_items(bytes, Some(max_len as usize))
+            // Safe conversion for 32-bit compatibility - clamp to usize::MAX
+            let max_len_usize = max_len.min(usize::MAX as u64) as usize;
+            ssz::decode_list_of_variable_length_items(bytes, Some(max_len_usize))
         }
     }
 }

@@ -34,6 +34,23 @@ impl Length {
     pub fn as_u64(&self) -> u64 {
         self.0
     }
+
+    /// Convert to usize, returning an error if the value exceeds usize::MAX.
+    /// This is important for 32-bit compatibility where usize is only 32 bits.
+    #[inline(always)]
+    pub fn as_usize(&self) -> Result<usize, crate::Error> {
+        self.0.try_into().map_err(|_| crate::Error::LengthTooLarge {
+            length: self.0,
+            max_length: usize::MAX as u64,
+        })
+    }
+
+    /// Convert to usize, saturating at usize::MAX if the value is too large.
+    /// This is a safe fallback for cases where we can accept clamping.
+    #[inline(always)]
+    pub fn as_usize_saturating(&self) -> usize {
+        (self.0 as usize).min(usize::MAX)
+    }
 }
 
 /// Compute ceil(log(n))

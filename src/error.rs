@@ -34,6 +34,7 @@ pub enum Error {
     IntraRebaseZeroHash,
     IntraRebaseZeroDepth,
     IntraRebaseRepeatVisit,
+    LengthTooLarge { length: u64, max_length: u64 },
 }
 
 impl Display for Error {

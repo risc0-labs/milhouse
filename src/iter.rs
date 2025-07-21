@@ -100,7 +100,9 @@ impl<'a, T: Value> Iterator for Iter<'a, T> {
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         let remaining = self.length.as_u64().saturating_sub(self.index as u64);
-        (remaining as usize, Some(remaining as usize))
+        // Safe conversion for 32-bit compatibility
+        let remaining_usize = remaining.min(usize::MAX as u64) as usize;
+        (remaining_usize, Some(remaining_usize))
     }
 }
 

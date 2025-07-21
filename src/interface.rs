@@ -127,7 +127,8 @@ where
     }
 
     pub fn len(&self) -> usize {
-        updated_length(self.backing.len(), &self.updates).as_u64() as usize
+        // Safe conversion from u64 to usize, saturating at usize::MAX for 32-bit compatibility
+        updated_length(self.backing.len(), &self.updates).as_usize_saturating()
     }
 
     pub fn is_empty(&self) -> bool {
